@@ -1,0 +1,151 @@
+#!/bin/bash
+
+filename=$(basename -- "$1")
+extension="${filename##*.}"
+filename="${filename%.*}"
+DIRECTORY=$(dirname "$1")
+DIRECTORY=$(realpath $DIRECTORY)
+
+#HERE'S OUR FIRST REAL STEP: WE ENSURE THAT THERE IS AN EXISTING ARGUMENT
+if [ "$#" -ne 1 ]
+then
+    echo "Usage: microbit_complie [myFile.cpp]"
+    exit 1
+fi
+
+if test -f "$1"; then
+    echo "valid file" >/dev/null
+else
+    echo "The supplied argument ($1) is not a valid file"
+    echo "Usage: microbit_complie [myFile.cpp]"
+    exit 1
+fi
+
+#SEE IF python3 exists
+if command -v python3 &>/dev/null; then
+    echo "Python 3 is installed" > /dev/null
+else
+    echo "This script requires Python3 to be installed."
+    echo "You can install python via the command 'apt-get install python3'"
+    exit 1
+fi
+
+#SEE IF python3 exists
+if command -v virtualenv &>/dev/null; then
+    echo "virtualenv is installed" > /dev/null
+else
+    echo "This script requires virtualenv to be installed."
+    echo "You can install virtualenv via the command 'apt-get install virtualenv'"
+    exit 1
+fi
+
+
+#HERE'S OUR FIRST STEP: WE ENSURE THE GITHUB PROJECT EXISTS
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+PROJECT_DIR="$DIR/microbit/microbit-samples"
+MAIN_FILE="$PROJECT_DIR/source/main.cpp"
+
+#SEE IF THE VIRTUAL ENVIRONMENT EXISTS
+
+if test -f "$DIR/microbit/venv/bin/activate"; then
+    source "$DIR/microbit/venv/bin/activate"
+else
+    echo "Virtual environment does not exist - creating virtual environment..."
+    virtualenv --python=python3 "$DIR/microbit/venv"    
+fi
+
+#CHECK IF YOTTA IS INSTALLED IN THE VIRTUAL ENVIRONMENT
+if command -v yt &>/dev/null; then
+    echo "yotta is installed" > /dev/null
+else
+    echo "Installing yotta within the virtual environment..."
+    pip install yotta
+    if [ $? -eq 0 ]; then
+	echo ""
+	echo "    Yotta successfully installed"
+    else
+	echo "Could not install yotta (are you connected to the internet?)"
+	exit 1
+    fi
+fi
+
+isPackageInstalled() {
+    if dpkg -s "$PACKAGENAME" &>/dev/null; then
+	echo "$PACKAGENAME is installed" > /dev/null
+    else
+	echo "This script requires the $PACKAGENAME package to be installed."
+	echo "You can install $PACKAGENAME via the command 'apt-get install $PACKAGENAME'"
+	echo "The suggested dependencies for yotta are $PACKAGELIST"
+	exit 1
+    fi
+}
+
+suggestedPackageInstalled() {
+    if dpkg -s "$PACKAGENAME" &>/dev/null; then
+	echo "$PACKAGENAME is installed" > /dev/null
+    else
+	echo "This script suggests the $PACKAGENAME package to be installed."
+	echo "You can install $PACKAGENAME via the command 'apt-get install $PACKAGENAME'"
+	echo "The suggested dependencies for yotta are $PACKAGELIST"
+    fi
+}
+
+##THERE'S A BIG LIST OF DEPENDENCIES WE NEED TO RESOLVE
+PACKAGELIST="python-setuptools  cmake build-essential ninja-build python-dev libffi-dev libssl-dev"
+
+PACKAGENAME=srecord
+isPackageInstalled
+
+PACKAGENAME=python-setuptools
+isPackageInstalled
+
+PACKAGENAME=cmake
+isPackageInstalled
+
+PACKAGENAME=build-essential
+isPackageInstalled
+
+PACKAGENAME=ninja-build
+isPackageInstalled
+
+PACKAGENAME=python-dev
+isPackageInstalled
+
+PACKAGENAME=libffi-dev
+isPackageInstalled
+
+PACKAGENAME=libssl-dev
+suggestedPackageInstalled
+
+PACKAGENAME=gcc-arm-none-eabi
+isPackageInstalled
+
+if test -f "$MAIN_FILE"; then
+    echo "    There is an existing working directory. Attempting to make use of that directory..." >/dev/null
+else
+    echo "    Importing project..."
+    (cd "$DIR" && mkdir microbit)
+    (cd "$DIR/microbit" && git clone https://github.com/lancaster-university/microbit-samples)
+fi
+
+
+
+echo "    Importing code..."
+cp $1 $MAIN_FILE
+
+echo "    cleaning..."
+(cd $PROJECT_DIR && yt clean)
+
+echo "    building..."
+(cd $PROJECT_DIR && yt build)
+
+if [ $? -eq 0 ]; then  
+    cp "$PROJECT_DIR/build/bbc-microbit-classic-gcc/source/microbit-samples-combined.hex" "$DIRECTORY/$filename.hex"
+    echo ""
+    echo ""
+    echo "    Output file produced as $DIRECTORY/$filename.hex"
+else
+    echo ""
+    echo ""
+    echo "    Project failed to build!"
+fi
