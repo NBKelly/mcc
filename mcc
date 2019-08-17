@@ -9,7 +9,7 @@ DIRECTORY=$(realpath $DIRECTORY)
 #HERE'S OUR FIRST REAL STEP: WE ENSURE THAT THERE IS AN EXISTING ARGUMENT
 if [ "$#" -ne 1 ]
 then
-    echo "Usage: microbit_complie [myFile.cpp]"
+    echo "Usage: mcc [myFile.cpp]"
     exit 1
 fi
 
@@ -17,7 +17,7 @@ if test -f "$1"; then
     echo "valid file" >/dev/null
 else
     echo "The supplied argument ($1) is not a valid file"
-    echo "Usage: microbit_complie [myFile.cpp]"
+    echo "Usage: mcc [myFile.cpp]"
     exit 1
 fi
 
