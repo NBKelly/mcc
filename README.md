@@ -19,7 +19,7 @@ sudo mv mcc-completion.bash /etc/bash_completion.d/.
 Alternatively, you can have it sourced via your bashrc script.
 ```bash
 mv mcc-completion.bash .local/bin/.
-echo source .local/bin/mcc-completion.bash >> .bashrc
+echo source .local/bin/mcc-completion.bash >> ~/.bashrc
 ```
 
 ## How do I use this script?
