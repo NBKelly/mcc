@@ -38,37 +38,6 @@ else
     echo "You can install virtualenv via the command 'apt-get install virtualenv'"
     exit 1
 fi
-
-
-#HERE'S OUR FIRST STEP: WE ENSURE THE GITHUB PROJECT EXISTS
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-PROJECT_DIR="$DIR/microbit/microbit-samples"
-MAIN_FILE="$PROJECT_DIR/source/main.cpp"
-
-#SEE IF THE VIRTUAL ENVIRONMENT EXISTS
-
-if test -f "$DIR/microbit/venv/bin/activate"; then
-    source "$DIR/microbit/venv/bin/activate"
-else
-    echo "Virtual environment does not exist - creating virtual environment..."
-    virtualenv --python=python3 "$DIR/microbit/venv"    
-fi
-
-#CHECK IF YOTTA IS INSTALLED IN THE VIRTUAL ENVIRONMENT
-if command -v yt &>/dev/null; then
-    echo "yotta is installed" > /dev/null
-else
-    echo "Installing yotta within the virtual environment..."
-    pip install yotta
-    if [ $? -eq 0 ]; then
-	echo ""
-	echo "    Yotta successfully installed"
-    else
-	echo "Could not install yotta (are you connected to the internet?)"
-	exit 1
-    fi
-fi
-
 isPackageInstalled() {
     if dpkg -s "$PACKAGENAME" &>/dev/null; then
 	echo "$PACKAGENAME is installed" > /dev/null
@@ -119,6 +88,37 @@ suggestedPackageInstalled
 
 PACKAGENAME=gcc-arm-none-eabi
 isPackageInstalled
+
+
+
+#HERE'S OUR FIRST STEP: WE ENSURE THE GITHUB PROJECT EXISTS
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+PROJECT_DIR="$DIR/microbit/microbit-samples"
+MAIN_FILE="$PROJECT_DIR/source/main.cpp"
+
+#SEE IF THE VIRTUAL ENVIRONMENT EXISTS
+
+if test -f "$DIR/microbit/venv/bin/activate"; then
+    source "$DIR/microbit/venv/bin/activate"
+else
+    echo "Virtual environment does not exist - creating virtual environment..."
+    virtualenv --python=python3 "$DIR/microbit/venv"    
+fi
+
+#CHECK IF YOTTA IS INSTALLED IN THE VIRTUAL ENVIRONMENT
+if command -v yt &>/dev/null; then
+    echo "yotta is installed" > /dev/null
+else
+    echo "Installing yotta within the virtual environment..."
+    pip install yotta
+    if [ $? -eq 0 ]; then
+	echo ""
+	echo "    Yotta successfully installed"
+    else
+	echo "Could not install yotta (are you connected to the internet?)"
+	exit 1
+    fi
+fi
 
 if test -f "$MAIN_FILE"; then
     echo "    There is an existing working directory. Attempting to make use of that directory..." >/dev/null
